@@ -21,7 +21,7 @@ export default function LibraryPage() {
     // if (savedAnimations) {
     //   setAnimations(JSON.parse(savedAnimations))
     // }
-
+    if(!user) return
     const mockAnimation1 = {
       id: "mock-id",
       title: "Mock Animation1",
