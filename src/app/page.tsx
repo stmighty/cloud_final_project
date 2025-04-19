@@ -5,48 +5,26 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { PlusCircle } from "lucide-react"
 import AnimationCard from "@/components/animation-card"
-import type { Animation } from "@/lib/types"
+import type { Animation } from "@/interfaces/Animation"
 import { useAuth } from "@/contexts/AuthContext"
 import { ProfileButton } from "@/components/profile-button"
 import { Separator } from "@/components/ui/separator"
-import { create } from "domain"
+import api2 from "@/lib/axios2";
 
-export default function LibraryPage() {
+export default function LandingPage() {
   const [animations, setAnimations] = useState<Animation[]>([])
   const { user, loading } = useAuth()
 
-  useEffect(() => {
-    // Load animations from localStorage
-    // const savedAnimations = localStorage.getItem("animations")
-    // if (savedAnimations) {
-    //   setAnimations(JSON.parse(savedAnimations))
-    // }
-    if(!user) return
-    const mockAnimation1 = {
-      id: "mock-id",
-      title: "Mock Animation1",
-      createdAt: new Date().toISOString(),
-      thumbnail: "/next.svg", // Make sure this image exists in your public folder
-      frames: [
-        { id: "f1", data: "/next.svg" },
-        { id: "f2", data: "/vercel.svg" },
-      ],
-      createdBy: user?.uid || "me",
-    }
+  const fetchAnimations = async () => {
+    if (!user) return
+    const response = await api2.get(`/animations`);
+    setAnimations(response.data.animations)
+    console.log("Fetched animations:", animations)
+  }
 
-    const mockAnimation2 = {
-      id: "mock-id",
-      title: "Mock Animation2",
-      createdAt: new Date().toISOString(),
-      thumbnail: "/next.svg", // Make sure this image exists in your public folder
-      frames: [
-        { id: "f1", data: "/next.svg" },
-        { id: "f2", data: "/vercel.svg" },
-      ],
-      createdBy: user?.uid || "me",
-    }
-    setAnimations([mockAnimation1, mockAnimation2])
-  }, [])
+  useEffect(() => {
+    fetchAnimations();
+  }, [user]);
 
   return (
     <div className="min-h-[100svh] flex flex-col bg-gradient-to-b from-background to-background/50">
@@ -112,14 +90,15 @@ export default function LibraryPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-8">
             {animations.map((animation) => (
               <AnimationCard
-                key={animation.id}
+                key={animation._id}
                 animation={animation}
+                canDelete={animation.userId === user?.uid}
                 onDelete={(id) => {
-                  const updated = animations.filter((a) => a.id !== id)
+                  const updated = animations.filter((a) => a._id !== id)
                   setAnimations(updated)
                   localStorage.setItem("animations", JSON.stringify(updated))
                 }}
-              />
+              />            
             ))}
           </div>
         )}
