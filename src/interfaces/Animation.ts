@@ -1,8 +1,12 @@
+export interface Frame {
+  id: string
+  data: string | null
+}
+
 export interface Animation {
-  _id: string
-  userId: string
-  imageList: string[]
+  id: string
+  title: string
+  frames: Frame[]
   createdAt: string
-  updatedAt: string
-  name: string
+  thumbnail: string
 }

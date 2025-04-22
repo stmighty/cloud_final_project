@@ -1,109 +1,154 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Play, Pause, Trash2, MoreHorizontal, User } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import type { Animation } from "@/interfaces/Animation"
-import api2 from "@/lib/axios2"
-import Image from "next/image"
+import { useState, useEffect, useRef } from "react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Pause, Trash2, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import type { Animation } from "@/interfaces/Animation";
 
 interface AnimationCardProps {
-  animation: Animation
-  canDelete?: boolean
-  onDelete: (id: string) => void
+  animation: Animation;
+  onDelete: (id: string) => void;
 }
 
-export default function AnimationCard({ animation, canDelete, onDelete }: AnimationCardProps) {
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentFrameIndex, setCurrentFrameIndex] = useState(0)
-  const [previewImage, setPreviewImage] = useState(animation.imageList[0])
-
-  const handleDelete = async () => {
-    try {
-      await api2.delete(`animations/${animation._id}`)
-      onDelete?.(animation._id)
-    } catch (err) {
-      console.error("Failed to delete animation", err)
-    }
-  }
+export default function AnimationCard({
+  animation,
+  onDelete,
+}: AnimationCardProps) {
+  const [isPlaying, setIsPlaying] = useState(true); // Auto-play by default
+  const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
+  const [previewImage, setPreviewImage] = useState(animation.thumbnail);
+  const animationTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const togglePlayback = () => {
-    setIsPlaying(!isPlaying)
+    setIsPlaying(!isPlaying);
     if (!isPlaying) {
-      setCurrentFrameIndex(0)
-      setPreviewImage(animation.imageList[0])
+      setCurrentFrameIndex(0);
+      setPreviewImage(animation.frames[0].data as string);
+    } else {
+      setPreviewImage(animation.thumbnail);
     }
-  }
+  };
 
+  // Use useEffect to handle animation playback
   useEffect(() => {
-    let animationTimer: NodeJS.Timeout
+    if (animationTimerRef.current) {
+      clearTimeout(animationTimerRef.current);
+    }
 
-    if (isPlaying && animation.imageList.length > 1) {
-      animationTimer = setTimeout(() => {
-        const nextIndex = (currentFrameIndex + 1) % animation.imageList.length
-        setCurrentFrameIndex(nextIndex)
-        setPreviewImage(animation.imageList[nextIndex])
-      }, 200) // 5 FPS
+    if (isPlaying && animation.frames.length > 1) {
+      animationTimerRef.current = setTimeout(() => {
+        const nextIndex = (currentFrameIndex + 1) % animation.frames.length;
+        setCurrentFrameIndex(nextIndex);
+        setPreviewImage(animation.frames[nextIndex].data as string);
+      }, 200); // 5 FPS
     }
 
     return () => {
-      if (animationTimer) clearTimeout(animationTimer)
-    }
-  }, [isPlaying, currentFrameIndex, animation.imageList])
+      if (animationTimerRef.current) {
+        clearTimeout(animationTimerRef.current);
+      }
+    };
+  }, [isPlaying, currentFrameIndex, animation.frames]);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      if (animationTimerRef.current) {
+        clearTimeout(animationTimerRef.current);
+      }
+    };
+  }, []);
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString()
-  }
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
 
   return (
-    <Card className="overflow-hidden">
-      <CardContent className="p-0 relative">
-        <div className="aspect-square bg-muted/30 flex items-center justify-center">
+    <Card className="overflow-hidden h-full flex flex-col hover:shadow-md transition-shadow">
+      <CardContent className="p-0 relative flex-grow">
+        <div className="aspect-square bg-white flex items-center justify-center overflow-hidden">
           <img
-            src={previewImage}
-            alt="animation-preview"
+            src={previewImage || "/placeholder.svg"}
+            alt={animation.title}
             className="w-full h-full object-contain"
           />
         </div>
-        <Button
-          variant="secondary"
-          size="icon"
-          className="absolute bottom-2 right-2 rounded-full"
-          onClick={togglePlayback}
-        >
-          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="absolute bottom-2 right-2 rounded-full w-8 h-8 bg-background/80 backdrop-blur-sm hover:bg-background"
+                onClick={togglePlayback}
+              >
+                {isPlaying ? (
+                  <Pause className="h-4 w-4" />
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="lucide lucide-play"
+                  >
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{isPlaying ? "Pause" : "Play"} animation</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </CardContent>
-      <CardFooter className="p-3 flex flex-col items-start gap-1">
-        <div className="w-full flex justify-between items-center">
-          <h3 className="font-medium truncate">{animation.name}</h3>
-          {canDelete && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleDelete}>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+      <CardFooter className="p-2 flex justify-between items-center bg-muted/20">
+        <div className="overflow-hidden">
+          <h3 className="font-medium text-sm truncate" title={animation.title}>
+            {animation.title}
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            {formatDate(animation.createdAt)}
+          </p>
         </div>
-        <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <User className="h-3 w-3" />
-            <span className="truncate max-w-[120px]">{animation.userId}</span>
-          </div>
-          <span>{formatDate(animation.createdAt)}</span>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal className="h-4 w-4" />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => onDelete(animation.id)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </CardFooter>
     </Card>
-  )
+  );
 }
