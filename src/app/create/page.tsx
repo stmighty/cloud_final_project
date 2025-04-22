@@ -44,6 +44,7 @@ export default function CreateAnimationPage() {
     null
   );
   const [isFrameInitialized, setIsFrameInitialized] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Create an offscreen canvas for the current frame only (without preview)
   useEffect(() => {
@@ -441,6 +442,7 @@ export default function CreateAnimationPage() {
   };
 
   const saveAnimation = async () => {
+    setIsSaving(true);
     saveCurrentFrame();
 
     // Filter out frames with no content
@@ -449,6 +451,7 @@ export default function CreateAnimationPage() {
     // Make sure we have at least one frame
     if (validFrames.length === 0) {
       alert("Please create at least one frame with content before saving.");
+      setIsSaving(false);
       return;
     }
 
@@ -466,6 +469,8 @@ export default function CreateAnimationPage() {
     } catch (error) {
       console.error("Error saving animation:", error);
       alert("An error occurred while saving the animation. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -488,9 +493,22 @@ export default function CreateAnimationPage() {
             placeholder="Animation Title"
           />
         </div>
-        <Button onClick={saveAnimation} className="flex items-center gap-2">
-          <Save className="h-4 w-4" />
-          Save Animation
+        <Button 
+          onClick={saveAnimation} 
+          className="flex items-center gap-2"
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4" />
+              Save Animation
+            </>
+          )}
         </Button>
       </div>
 
