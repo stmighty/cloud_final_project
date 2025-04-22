@@ -72,6 +72,8 @@ export async function getFirebaseToken() {
       token = (await auth.currentUser?.getIdToken(true)) ?? "";
     }
 
+    console.log("Token: ", token);
+
     return token;
   } catch (error) {
     console.error("Error getting token", error);
