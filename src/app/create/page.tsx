@@ -21,8 +21,9 @@ import {
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import type { Animation, Frame } from "@/interfaces/Animation";
+import type { Frame } from "@/interfaces/Animation";
 import { v4 as uuidv4 } from "@/lib/uuid";
+import { animationService } from "@/services/animationService";
 
 export default function CreateAnimationPage() {
   const router = useRouter();
@@ -440,7 +441,7 @@ export default function CreateAnimationPage() {
     setIsFrameInitialized(false); // Reset for frame change
   };
 
-  const saveAnimation = () => {
+  const saveAnimation = async () => {
     saveCurrentFrame();
 
     // Filter out frames with no content
@@ -452,21 +453,21 @@ export default function CreateAnimationPage() {
       return;
     }
 
-    const animation: Animation = {
-      id: uuidv4(),
-      title,
-      frames: validFrames,
-      createdAt: new Date().toISOString(),
-      thumbnail: validFrames[0].data as string,
-    };
+    try {
+      const response = await animationService.create({
+        title,
+        frames: validFrames,
+      });
 
-    // Save to localStorage
-    const savedAnimations = localStorage.getItem("animations");
-    const animations = savedAnimations ? JSON.parse(savedAnimations) : [];
-    animations.push(animation);
-    localStorage.setItem("animations", JSON.stringify(animations));
-
-    router.push("/");
+      if (response.success) {
+        router.push("/");
+      } else {
+        alert("Failed to save animation. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error saving animation:", error);
+      alert("An error occurred while saving the animation. Please try again.");
+    }
   };
 
   return (
