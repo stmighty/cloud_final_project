@@ -19,10 +19,6 @@ export default function LandingPage() {
   const { user, loading } = useAuth();
 
   const fetchAnimations = async () => {
-    if (!user) {
-      setIsLoading(false);
-      return;
-    }
     try {
       setIsLoading(true);
       const response = await animationService.getAll();
@@ -34,6 +30,7 @@ export default function LandingPage() {
       setIsLoading(false);
     }
   };
+  
 
   const handleDelete = async (id: string) => {
     try {
