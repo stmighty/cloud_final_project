@@ -280,7 +280,7 @@ export default function CreateAnimationPage() {
     currentFrameCtx.beginPath();
     currentFrameCtx.moveTo(startX, startY);
     currentFrameCtx.lineTo(endX, endY);
-    currentFrameCtx.strokeStyle = isEraser ? "rgba(255,255,255,0)" : color; // Use transparent for eraser
+    currentFrameCtx.strokeStyle = isEraser ? "white" : color;
     currentFrameCtx.lineWidth = brushSize;
     currentFrameCtx.lineCap = "round";
     currentFrameCtx.lineJoin = "round";
@@ -392,8 +392,7 @@ export default function CreateAnimationPage() {
           // Draw a dot on current frame canvas
           currentFrameCtx.beginPath();
           currentFrameCtx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
-          currentFrameCtx.fillStyle =
-            tool === "eraser" ? "rgba(255,255,255,0)" : color;
+          currentFrameCtx.fillStyle = tool === "eraser" ? "white" : color;
           currentFrameCtx.fill();
         }
       }
