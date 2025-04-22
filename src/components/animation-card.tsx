@@ -20,12 +20,16 @@ import type { Animation } from "@/interfaces/Animation";
 
 interface AnimationCardProps {
   animation: Animation;
+  canDelete: boolean;
   onDelete: (id: string) => void;
+  isDeleting?: boolean;
 }
 
 export default function AnimationCard({
   animation,
+  canDelete,
   onDelete,
+  isDeleting = false,
 }: AnimationCardProps) {
   const [isPlaying, setIsPlaying] = useState(true); // Auto-play by default
   const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
@@ -96,24 +100,7 @@ export default function AnimationCard({
                 className="absolute bottom-2 right-2 rounded-full w-8 h-8 bg-background/80 backdrop-blur-sm hover:bg-background"
                 onClick={togglePlayback}
               >
-                {isPlaying ? (
-                  <Pause className="h-4 w-4" />
-                ) : (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-play"
-                  >
-                    <polygon points="5 3 19 12 5 21 5 3" />
-                  </svg>
-                )}
+                <Pause className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -122,32 +109,37 @@ export default function AnimationCard({
           </Tooltip>
         </TooltipProvider>
       </CardContent>
-      <CardFooter className="p-2 flex justify-between items-center bg-muted/20">
-        <div className="overflow-hidden">
-          <h3 className="font-medium text-sm truncate" title={animation.title}>
-            {animation.title}
-          </h3>
-          <p className="text-xs text-muted-foreground">
+      <CardFooter className="p-4 flex justify-between items-center">
+        <div className="flex flex-col">
+          <h3 className="font-medium">{animation.title}</h3>
+          <p className="text-sm text-muted-foreground">
             {formatDate(animation.createdAt)}
           </p>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">Open menu</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={() => onDelete(animation.id)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {canDelete && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => onDelete(animation._id)}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Delete animation</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </CardFooter>
     </Card>
   );

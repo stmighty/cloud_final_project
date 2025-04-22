@@ -4,7 +4,8 @@ export interface Frame {
 }
 
 export interface Animation {
-  id: string
+  _id: string
+  userId: string
   title: string
   frames: Frame[]
   createdAt: string
