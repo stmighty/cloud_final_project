@@ -10,4 +10,6 @@ export interface Animation {
   frames: Frame[]
   createdAt: string
   thumbnail: string
+  isLiked?: boolean
+  likeCount: number
 }

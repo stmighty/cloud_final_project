@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pause, Trash2, MoreHorizontal } from "lucide-react";
+import { Pause, Trash2, MoreHorizontal, Heart } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +17,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { Animation } from "@/interfaces/Animation";
+import { animationService } from "@/services/animationService";
+import { toast } from "sonner";
 
 interface AnimationCardProps {
   animation: Animation;
@@ -34,7 +36,14 @@ export default function AnimationCard({
   const [isPlaying, setIsPlaying] = useState(true); // Auto-play by default
   const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
   const [previewImage, setPreviewImage] = useState(animation.thumbnail);
+  const [isLiked, setIsLiked] = useState(animation.isLiked ?? false);
+  const [likeCount, setLikeCount] = useState(animation.likeCount);
   const animationTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setIsLiked(animation.isLiked ?? false);
+    setLikeCount(animation.likeCount);
+  }, [animation.isLiked, animation.likeCount]);
 
   const togglePlayback = () => {
     setIsPlaying(!isPlaying);
@@ -43,6 +52,21 @@ export default function AnimationCard({
       setPreviewImage(animation.frames[0].data as string);
     } else {
       setPreviewImage(animation.thumbnail);
+    }
+  };
+
+  const handleLike = async () => {
+    try {
+      const response = await animationService.react(animation._id, !isLiked);
+      if (response.success) {
+        setIsLiked(response.isLiked ?? false);
+        setLikeCount(response.likeCount);
+      } else {
+        toast.error("Failed to update reaction");
+      }
+    } catch (error) {
+      console.error("Error updating reaction:", error);
+      toast.error("Failed to update reaction");
     }
   };
 
@@ -115,6 +139,20 @@ export default function AnimationCard({
           <p className="text-sm text-muted-foreground">
             {formatDate(animation.createdAt)}
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleLike}
+            className={isLiked ? "text-red-500 hover:text-red-600" : ""}
+          >
+            <Heart
+              className="h-4 w-4"
+              fill={isLiked ? "currentColor" : "none"}
+            />
+          </Button>
+          <span className="text-sm text-muted-foreground">{likeCount}</span>
         </div>
         {canDelete && (
           <TooltipProvider>

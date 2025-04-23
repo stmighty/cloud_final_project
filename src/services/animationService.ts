@@ -13,6 +13,8 @@ export interface Animation {
   thumbnail: string;
   createdAt: string;
   updatedAt: string;
+  isLiked?: boolean;
+  likeCount: number;
 }
 
 export interface CreateAnimationRequest {
@@ -57,6 +59,16 @@ export const animationService = {
       success: boolean;
       message: string;
     }>(`/animations/${id}`);
+    return response.data;
+  },
+
+  react: async (id: string, isLiked: boolean) => {
+    const response = await api2.post<{
+      success: boolean;
+      message: string;
+      isLiked: boolean | null;
+      likeCount: number;
+    }>(`/animations/${id}/react`, { isLiked });
     return response.data;
   },
 }; 

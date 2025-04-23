@@ -30,7 +30,6 @@ export default function LandingPage() {
       setIsLoading(false);
     }
   };
-  
 
   const handleDelete = async (id: string) => {
     try {
@@ -51,6 +50,7 @@ export default function LandingPage() {
   };
 
   useEffect(() => {
+    console.log(user);
     fetchAnimations();
   }, [user]);
 
