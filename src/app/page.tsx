@@ -11,11 +11,13 @@ import { ProfileButton } from "@/components/profile-button";
 import { Separator } from "@/components/ui/separator";
 import { animationService } from "@/services/animationService";
 import { toast } from "sonner";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function LandingPage() {
   const [animations, setAnimations] = useState<Animation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"all" | "top">("all");
   const { user, loading } = useAuth();
 
   const fetchAnimations = async () => {
@@ -26,6 +28,19 @@ export default function LandingPage() {
     } catch (error) {
       console.error("Error fetching animations:", error);
       toast.error("Failed to load animations");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchTopLiked = async () => {
+    try {
+      setIsLoading(true);
+      const response = await animationService.getTopLiked();
+      setAnimations(response.animations);
+    } catch (error) {
+      console.error("Error fetching top liked animations:", error);
+      toast.error("Failed to load top liked animations");
     } finally {
       setIsLoading(false);
     }
@@ -50,9 +65,12 @@ export default function LandingPage() {
   };
 
   useEffect(() => {
-    console.log(user);
-    fetchAnimations();
-  }, [user]);
+    if (activeTab === "all") {
+      fetchAnimations();
+    } else {
+      fetchTopLiked();
+    }
+  }, [activeTab]);
 
   return (
     <div className="min-h-[100svh] flex flex-col bg-gradient-to-b from-background to-background/50">
@@ -99,6 +117,17 @@ export default function LandingPage() {
       <Separator className="mt-6" />
 
       <div className="container mx-auto p-4 flex-grow">
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as "all" | "top")}
+          className="mb-6"
+        >
+          <TabsList>
+            <TabsTrigger value="all">All Animations</TabsTrigger>
+            <TabsTrigger value="top">Top Liked</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />

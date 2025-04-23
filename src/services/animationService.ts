@@ -71,4 +71,13 @@ export const animationService = {
     }>(`/animations/${id}/react`, { isLiked });
     return response.data;
   },
+
+  getTopLiked: async () => {
+    const response = await api2.get<{
+      success: boolean;
+      animations: Animation[];
+      count: number;
+    }>("/animations/top-liked");
+    return response.data;
+  },
 }; 
